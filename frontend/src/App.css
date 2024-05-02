@@ -1,0 +1,22 @@
+.row-class{
+  background-color: red;
+}
+
+.ant-table-row:nth-child(even) {
+  background-color: #e7d9d9; /* Light grey background for even rows */
+}
+
+.ant-table-row:nth-child(odd) {
+  background-color: white; /* White background for odd rows */
+}
+.row-class {
+  border: 1px solid teal; /* Border for table rows */
+}
+
+.custom-input {
+  width: 300px;
+  border-radius: 5px;
+  border: 1px solid #d9d9d9;
+  transition: border-color 0.3s;
+  font-size: 14px; /* Add your font size here */
+}
