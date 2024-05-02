@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Input, Table, Tag } from "antd";
 import { useSearchParams } from "react-router-dom";
 import { useLocation } from "react-router-dom";
+import { Select, Space } from 'antd';
 import "../App.css";
 
 export const TableData = () => {
@@ -10,6 +11,7 @@ export const TableData = () => {
   const [total, setTotal] = useState();
   const [skip, setSkip] = useState(0);
   const [limit, setLimit] = useState(10);
+  const [loading,setLoading] = useState(false)
 
   // set URL param
   const [searchParams, setSearchParams] = useSearchParams();
@@ -35,7 +37,7 @@ export const TableData = () => {
       title: "Title",
       dataIndex: "title",
       align: "center",
-      key: "id",
+      key: "title",
     },
     {
       title: "Body",
@@ -66,14 +68,27 @@ export const TableData = () => {
 
   const getData = (skip, limit, searchText) => {
     // use SearchText for searching the Data
-    fetch(`https://dummyjson.com/posts?skip=${skip}&limit=${limit}`)
+    // setLoading(true)
+    let url
+if(skip) {
+    url = `https://dummyjson.com/posts?skip=${skip}&limit=${limit}` 
+
+}
+if(searchText) {
+     url = `https://dummyjson.com/posts/search?q=${searchText}&skip=${skip}&limit=${limit}` 
+}
+
+    fetch(url)
       .then((res) => res.json())
       .then((data) => {
+        setLoading(false)
         setData(data.posts);
         setTotal(data.total);
+        
       })
       .catch((err) => {
         console.log(err);
+        
       });
   };
 
@@ -85,7 +100,7 @@ export const TableData = () => {
       urlParams.set("searchText", text);
       setSearchParams(urlParams.toString());
     }
-
+    getData(skip, limit,text) 
     // here you can call api and Adjust the payload for ex-
     //  getData(skip, limit,text)  text for search data also create useSate for skip so that we can easily update the api params Implement Filter same as search or pagination
   };
@@ -121,6 +136,17 @@ export const TableData = () => {
     console.log(pageSize);
     setLimit(pageSize);
   };
+  const options = [{label:"history",value:"history"},{label:"american",value:"american"},{label:"crime",value:"crime"},{label:"french",value:"french"},{label:"fiction",value:"fiction"},{label:"english",value:"english"},{label:"magical",value:"magical"},{label:"mystry",value:"mystry"},{label:"love",value:"love"},{label:"classic",value:"classic"}];
+// for (let i = 10; i < 36; i++) {
+//   options.push({
+//     label: i.toString(36) + i,
+//     value: i.toString(36) + i,
+//   });
+// }
+console.log(options,"opt")
+const handleChange = (value) => {
+  console.log(`selected ${value}`);
+};
 
   return (
     <>
@@ -133,11 +159,32 @@ export const TableData = () => {
           }}
           className="custom-input"
         />
+
+<Select
+      mode="multiple"
+      allowClear
+      filterOption
+      style={{
+        width: '100%',
+      }}
+      placeholder="Please select"
+      
+      onChange={handleChange}
+      options={options}
+    />
+
+
       </div>
+
+
+
+
+
 
       <Table
         dataSource={data}
         columns={columns}
+        // loading={loading}
         size="small"
         style={{ margin: "auto", width: "80%" }}
         pagination={{
