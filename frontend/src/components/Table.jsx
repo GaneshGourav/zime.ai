@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { Input, Table, Tag } from "antd";
+import { Input, Table, Tag, Select } from "antd";
 import { useSearchParams } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-import { Select, Space } from 'antd';
 import "../App.css";
 
 export const TableData = () => {
   const [data, setData] = useState([]);
+  const [filter, setFilterData] = useState([]);
+  const [selectedValues, setSelectedValues] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState();
   const [skip, setSkip] = useState(0);
   const [limit, setLimit] = useState(10);
-  const [loading,setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   // set URL param
   const [searchParams, setSearchParams] = useSearchParams();
@@ -22,7 +23,8 @@ export const TableData = () => {
 
   // GET URL Params Data
   const query = searchParams.get("page");
-  const search = searchParams.get("searchText");
+  const search = searchParams.get("searchText" ?? "");
+  const filterParam = searchParams.get("filter");
   const [text, setText] = useState(search ?? "");
 
   console.log(text, "text");
@@ -44,10 +46,6 @@ export const TableData = () => {
       dataIndex: "body",
       align: "center",
       key: "body",
-      filteredValue: [text],
-      onFilter: (value, record) => {
-        return String(record.body).toLowerCase().includes(value.toLowerCase());
-      },
     },
     {
       title: "Tags",
@@ -67,42 +65,40 @@ export const TableData = () => {
   ];
 
   const getData = (skip, limit, searchText) => {
-    // use SearchText for searching the Data
-    // setLoading(true)
-    let url
-if(skip) {
-    url = `https://dummyjson.com/posts?skip=${skip}&limit=${limit}` 
-
-}
-if(searchText) {
-     url = `https://dummyjson.com/posts/search?q=${searchText}&skip=${skip}&limit=${limit}` 
-}
-
+    let url;
+    if (skip) {
+      url = `https://dummyjson.com/posts?skip=${skip}&limit=${limit}`;
+    }
+    if (searchText) {
+      url = `https://dummyjson.com/posts/search?q=${searchText}&skip=${skip}&limit=${limit}`;
+    }
+    setLoading(true);
     fetch(url)
       .then((res) => res.json())
       .then((data) => {
-        setLoading(false)
+        setLoading(false);
         setData(data.posts);
+        setFilterData(data.posts);
         setTotal(data.total);
-        
       })
       .catch((err) => {
         console.log(err);
-        
       });
   };
 
+  // Search on press Enter
+
   const handleSearchOnEnter = (e) => {
-    if (text == "") {
+    setText(e);
+
+    if (e == "") {
       urlParams.delete("searchText");
       setSearchParams(urlParams.toString());
     } else {
       urlParams.set("searchText", text);
       setSearchParams(urlParams.toString());
     }
-    getData(skip, limit,text) 
-    // here you can call api and Adjust the payload for ex-
-    //  getData(skip, limit,text)  text for search data also create useSate for skip so that we can easily update the api params Implement Filter same as search or pagination
+    getData(skip, limit, e);
   };
 
   useEffect(() => {
@@ -111,13 +107,27 @@ if(searchText) {
       setCurrentPage(query);
     }
     if (query !== "1") {
-      // skip = query * 20 - 20;
       skip = query * limit - limit;
-      // console.log(query,"auerys")
     }
     setSkip(skip);
-    getData(skip, limit);
+    getData(skip, limit, search);
+
+    if (filterParam) {
+      const selectedItems = filterParam.split(",");
+      setSelectedValues(selectedItems);
+
+      if (selectedItems.length > 0) {
+        const filteredData = filter.filter((obj) => {
+          return obj.tags.some((tag) => selectedItems.includes(tag));
+        });
+        console.log(filteredData);
+        setData(filteredData);
+        setTotal(filteredData.length);
+      }
+    }
   }, [skip, limit]);
+
+  // Function to handle pagination
 
   const handlePageChange = (page, pageSize) => {
     setCurrentPage(page);
@@ -126,65 +136,78 @@ if(searchText) {
     let skip = 0;
     if (page !== 1) {
       skip = page * pageSize - pageSize;
-      console.log(skip, "skipsssss");
-      setSkip(skip);
     }
-    console.log(page, "pages");
 
-    // setSkip(skip);
+    setSkip(skip);
     getData(skip, limit);
-    console.log(pageSize);
+
     setLimit(pageSize);
   };
-  const options = [{label:"history",value:"history"},{label:"american",value:"american"},{label:"crime",value:"crime"},{label:"french",value:"french"},{label:"fiction",value:"fiction"},{label:"english",value:"english"},{label:"magical",value:"magical"},{label:"mystry",value:"mystry"},{label:"love",value:"love"},{label:"classic",value:"classic"}];
-// for (let i = 10; i < 36; i++) {
-//   options.push({
-//     label: i.toString(36) + i,
-//     value: i.toString(36) + i,
-//   });
-// }
-console.log(options,"opt")
-const handleChange = (value) => {
-  console.log(`selected ${value}`);
-};
+  const options = [
+    { label: "history", value: "history" },
+    { label: "american", value: "american" },
+    { label: "crime", value: "crime" },
+    { label: "french", value: "french" },
+    { label: "fiction", value: "fiction" },
+    { label: "english", value: "english" },
+    { label: "magical", value: "magical" },
+    { label: "mystery", value: "mystery" },
+    { label: "love", value: "love" },
+    { label: "classic", value: "classic" },
+  ];
+
+  // Function to handle filter the multiple selected data
+
+  const handleChange = (value) => {
+    setSelectedValues(value);
+
+    const selectedData = value.map((val) => val);
+    urlParams.set("filter", selectedData);
+    setSearchParams(urlParams.toString());
+    if (selectedData.length > 0) {
+      const filteredData = filter.filter((obj) => {
+        return obj.tags.some((tag) => selectedData.includes(tag));
+      });
+      setData(filteredData);
+      setTotal(filteredData.length);
+    } else {
+      getData(skip, limit, search);
+      urlParams.delete("filter");
+      setSearchParams(urlParams.toString());
+    }
+  };
 
   return (
     <>
-      <h1>Ant table</h1>
+      <h1>Get Your Post</h1>
       <div className="">
         <Input.Search
+          value={text}
+          onChange={(e) => setText(e.target.value)}
           onSearch={(value) => {
             handleSearchOnEnter(value);
-            setText(value);
           }}
           className="custom-input"
         />
 
-<Select
-      mode="multiple"
-      allowClear
-      filterOption
-      style={{
-        width: '100%',
-      }}
-      placeholder="Please select"
-      
-      onChange={handleChange}
-      options={options}
-    />
-
-
+        <Select
+          mode="multiple"
+          allowClear
+          filterOption
+          style={{
+            width: "100%",
+          }}
+          placeholder="Please select"
+          onChange={handleChange}
+          options={options}
+          value={selectedValues}
+        />
       </div>
-
-
-
-
-
 
       <Table
         dataSource={data}
         columns={columns}
-        // loading={loading}
+        loading={loading}
         size="small"
         style={{ margin: "auto", width: "80%" }}
         pagination={{
