@@ -62,7 +62,7 @@ export const TableData = () => {
             <Tag
               color="blue"
               key={tag}
-              style={{ display: "flex", gap: "20px" }}
+              style={{  gap: "60px" }}
             >
               {tag}
             </Tag>
