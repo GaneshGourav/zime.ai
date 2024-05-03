@@ -34,28 +34,36 @@ export const TableData = () => {
       dataIndex: "id",
       key: "id",
       align: "center",
+      className: "column-id",
     },
     {
       title: "Title",
       dataIndex: "title",
       align: "center",
       key: "title",
+      className: "column-title",
     },
     {
       title: "Body",
       dataIndex: "body",
       align: "center",
       key: "body",
+      className: "column-body",
     },
     {
       title: "Tags",
       dataIndex: "tags",
       align: "center",
       key: "tags",
+      className: "column-tags",
       render: (tags) => (
         <>
           {tags.map((tag) => (
-            <Tag color="blue" key={tag} style={{ gap: "20px" }}>
+            <Tag
+              color="blue"
+              key={tag}
+              style={{ display: "flex", gap: "20px" }}
+            >
               {tag}
             </Tag>
           ))}
@@ -179,9 +187,10 @@ export const TableData = () => {
 
   return (
     <>
-      <h1>Get Your Post</h1>
-      <div className="">
+      <h1 className="heading">Get Your Post</h1>
+      <div className="search-filter">
         <Input.Search
+          placeholder="Search based on body..."
           value={text}
           onChange={(e) => setText(e.target.value)}
           onSearch={(value) => {
@@ -194,13 +203,11 @@ export const TableData = () => {
           mode="multiple"
           allowClear
           filterOption
-          style={{
-            width: "100%",
-          }}
           placeholder="Please select"
           onChange={handleChange}
           options={options}
           value={selectedValues}
+          className="select"
         />
       </div>
 
@@ -209,7 +216,12 @@ export const TableData = () => {
         columns={columns}
         loading={loading}
         size="small"
-        style={{ margin: "auto", width: "80%" }}
+        style={{
+          margin: "auto",
+          width: "80%",
+          marginTop: "30px",
+          marginBottom: "20px",
+        }}
         pagination={{
           current: currentPage,
           pageSize: limit,
