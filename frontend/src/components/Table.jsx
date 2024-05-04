@@ -23,11 +23,10 @@ export const TableData = () => {
 
   // GET URL Params Data
   const query = searchParams.get("page");
-  const search = searchParams.get("searchText" ?? "");
+  const search = searchParams.get("searchText");
   const filterParam = searchParams.get("filter");
   const [text, setText] = useState(search ?? "");
 
-  console.log(text, "text");
   const columns = [
     {
       title: "id",
@@ -59,11 +58,7 @@ export const TableData = () => {
       render: (tags) => (
         <>
           {tags.map((tag) => (
-            <Tag
-              color="blue"
-              key={tag}
-              style={{  gap: "60px" }}
-            >
+            <Tag color="blue" key={tag} style={{ gap: "60px" }}>
               {tag}
             </Tag>
           ))}
@@ -74,7 +69,7 @@ export const TableData = () => {
 
   const getData = (skip, limit, searchText) => {
     let url;
-    if (skip) {
+    if (skip || limit) {
       url = `https://dummyjson.com/posts?skip=${skip}&limit=${limit}`;
     }
     if (searchText) {
@@ -99,14 +94,18 @@ export const TableData = () => {
   const handleSearchOnEnter = (e) => {
     setText(e);
 
-    if (e == "") {
+    if (e === "") {
       urlParams.delete("searchText");
       setSearchParams(urlParams.toString());
+      let skip = query * 10 - 10;
+      setSkip(skip);
+      getData(skip, limit);
     } else {
-      urlParams.set("searchText", text);
+      urlParams.set("searchText", e);
       setSearchParams(urlParams.toString());
+
+      getData(0, limit, e);
     }
-    getData(skip, limit, e);
   };
 
   useEffect(() => {
@@ -119,7 +118,9 @@ export const TableData = () => {
     }
     setSkip(skip);
     getData(skip, limit, search);
+  }, [skip, limit]);
 
+  useEffect(() => {
     if (filterParam) {
       const selectedItems = filterParam.split(",");
       setSelectedValues(selectedItems);
@@ -128,12 +129,12 @@ export const TableData = () => {
         const filteredData = filter.filter((obj) => {
           return obj.tags.some((tag) => selectedItems.includes(tag));
         });
-        console.log(filteredData);
+
         setData(filteredData);
         setTotal(filteredData.length);
       }
     }
-  }, [skip, limit]);
+  });
 
   // Function to handle pagination
 
